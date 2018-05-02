@@ -12,7 +12,7 @@ from tqdm import tqdm
 from keras.applications.vgg16 import VGG16
 from keras.applications.resnet50 import ResNet50
 from keras.applications.mobilenet import MobileNet
-
+import sys
 
 trained_model = "vgg16"  # inception, vgg16, resnet50, mobilenet
 
@@ -160,13 +160,15 @@ valid_steps, valid_batches = batch_iter(X_test, y_test, batch_size)
 model.fit_generator(train_batches, train_steps, epochs=num_epochs, validation_data=valid_batches,
                     validation_steps=valid_steps)
 
+save_model = False
+if save_model:
 # serialize model to JSON
-model_json = model.to_json()
-with open("{}/{}_model.json".format(WORKING_DIR,trained_model), "w") as json_file:
-    json_file.write(model_json)
-# serialize weights to HDF5
-model.save_weights("{}/{}_model.h5".format(WORKING_DIR,trained_model))
-print("Saved model to disk")
+    model_json = model.to_json()
+    with open("{}/{}_model.json".format(WORKING_DIR,trained_model), "w") as json_file:
+        json_file.write(model_json)
+    # serialize weights to HDF5
+    model.save_weights("{}/{}_model.h5".format(WORKING_DIR,trained_model))
+    print("Saved model to disk")
 
 preds = model.predict(x_test, verbose=1)
 

@@ -9,8 +9,6 @@ from keras.models import Sequential
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
-trained_model = "vgg16"  # inception, vgg16, resnet50, mobilenet
-
 #  Get working directory and
 WORKING_DIR = "./data/"
 # Location of labels
@@ -33,38 +31,32 @@ one_hot_labels = np.asarray(one_hot)
 # Deisred image size
 im_size = 299
 # Number of classifications
-x_train_0 = []
-y_train_0 = []
-x_test_0 = []
+x_train_raw = []
+y_train_raw = []
+
 
 i = 0
 # Getting the training data
 for f, breed in tqdm(df_train.values):
     img = cv2.imread('{}{}.jpg'.format(TRAIN_FOLDER, f))
     label = one_hot_labels[i]
-    x_train_0.append(img)
-    y_train_0.append(label)
+    x_train_raw.append(img)
+    y_train_raw.append(label)
     i += 1
 
-# Get the data used for the kaggle compititon results
-for f in tqdm(df_test['id'].values):
-    img = cv2.imread('{}{}.jpg'.format(TEST_FOLDER, f))
-    x_test_0.append(img)
 
 # 0 to 1 instead of 255 collars
 
-y_train_raw = y_train_0
-x_train_raw = np.divide(x_train_0, 255.)
-x_test = np.divide(x_test_0, 255.)
+x_train_raw = np.divide(x_train_raw, 255.)
 
 # Check shape
 print(x_train_raw.shape)
 print(y_train_raw.shape)
-print(x_test.shape)
 
-num_class = y_train_raw.shape[1]
 
-# Splitting data
+num_classes = y_train_raw.shape[1]
+
+# Splitting data into training and testing
 X_train, X_test, y_train, y_test = train_test_split(x_train_raw, y_train_raw, test_size=0.2, random_state=1)
 
 print(X_train.shape, y_train.shape, X_test.shape, y_test.shape)
@@ -78,7 +70,6 @@ k.set_image_dim_ordering('tf')
 seed = 123
 np.random.seed(seed)
 # Number of classes
-num_classes = y_test.shape[1]
 
 
 def multilayer_cnn_model():
@@ -165,8 +156,8 @@ def bn_model():
 
 # build the model
 
-train_model = "multilayer"
-if train_model == "multilayer":
+trained_model = "multilayer"  # multilayer or bn_model
+if trained_model == "multilayer":
     model = multilayer_cnn_model()
 else:
     model = bn_model()
@@ -176,13 +167,29 @@ history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=2
 scores = model.evaluate(X_test, y_test, verbose=0)
 print("Baseline Error: %.2f%%" % (100 - scores[1] * 100))
 
+save_model = False
+if save_model:
 # serialize model to JSON
-model_json = model.to_json()
-with open("{}/{}_model.json".format(WORKING_DIR, trained_model), "w") as json_file:
-    json_file.write(model_json)
-# serialize weights to HDF5
-model.save_weights("{}/{}_model.h5".format(WORKING_DIR, trained_model))
-print("Saved model to disk")
+    model_json = model.to_json()
+    with open("{}/{}_model.json".format(WORKING_DIR,trained_model), "w") as json_file:
+        json_file.write(model_json)
+    # serialize weights to HDF5
+    model.save_weights("{}/{}_model.h5".format(WORKING_DIR,trained_model))
+    print("Saved model to disk")
+
+# Get the data used for the kaggle compititon results
+#  Setting some variables to zero to free up memory
+
+
+
+x_test = []
+for f in tqdm(df_test['id'].values):
+    img = cv2.imread('{}{}.jpg'.format(TEST_FOLDER, f))
+    x_test.append(img)
+
+x_test = np.divide(x_test, 255.)
+print(x_test.shape)
+
 
 preds = model.predict(x_test, verbose=1)
 
