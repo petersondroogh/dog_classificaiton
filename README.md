@@ -89,8 +89,9 @@ model = Model(inputs=base_model.input, outputs=predictions)
 ```
 
 The best result from this model was with inception and had a kaggle score of 1.9111 which as seen below.  
+![alt text](screenShots/Screen Shot 2018-05-03 at 11.17.34 AM.jpg?raw=true "Kaggle score using pretrained model - inception")
 
-![Alt text](dog_classificaiton/screenShots/Screen Shot 2018-05-03 at 11.17.34 AM.jpg?raw=true "Kaggle score using pretrained model: inception")
+
 
    
    
